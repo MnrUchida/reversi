@@ -14,20 +14,14 @@ defmodule Reversi.Board do
   def get_states,
   do: Agent.get(@name, &(&1))
 
-  def set_state(value, pos) do
-    Agent.update(@name, &set_value(&1, value, pos))
-  end
+  def set_state(value, pos), 
+  do: Agent.update(@name, &set_value(&1, value, pos))
 
-  def can_set?(value, {x, y}) do
-    _can_set?(value, {x, y}, Reversi.Board.get_state(x, y))
-  end
-
-  def get_all_lines(value, pos) do
-    _get_all_lines(value, pos)
-  end
+  def can_set?(value, {x, y}), 
+  do: _can_set?(value, {x, y}, get_state(x, y))
 
   def set_value(states, value, pos) do
-    Enum.reduce([pos | _get_all_lines(value, pos)], states, fn set_pos, acc -> 
+    Enum.reduce([pos | _get_all_lines(states, value, pos)], states, fn set_pos, acc -> 
       Map.put(acc, set_pos, value)
     end)
   end
@@ -44,6 +38,7 @@ defmodule Reversi.Board do
     |> Enum.join("\n")
     |> String.replace("-1", "w")
     |> String.replace("1", "b")
+    |> String.replace("0", " ")
   end
 
   @range 1..8
@@ -56,26 +51,26 @@ defmodule Reversi.Board do
   end
 
   defp _can_set?(value, pos, _cur_value = 0) do
-    _get_all_lines(value, pos) |> Enum.empty?() == false
+    _get_all_lines(get_states(), value, pos) |> Enum.empty?() == false
   end
   defp _can_set?(_value, _pos, _cur_value), do: false
 
-  defp _get_all_lines(value, {x, y}) do
+  def _get_all_lines(states, value, {x, y}) do
     Enum.flat_map(-1..1, fn x_inc ->
       Enum.flat_map(-1..1, fn y_inc ->
-        next_value = Reversi.Board.get_state(x + x_inc, y + y_inc)
-        _get_line(value, next_value, { x + x_inc, y + y_inc }, { x_inc, y_inc }, [])
+        next_value = states[{x + x_inc, y + y_inc}]
+        _get_line(states, value, next_value, { x + x_inc, y + y_inc }, { x_inc, y_inc }, [])
       end)
     end) 
   end
 
-  defp _get_line(_self_value, _value = nil, _pos, _inc, _acc), do: []
-  defp _get_line(_self_value, _value = 0, _pos, _inc, _acc), do: []
-  defp _get_line(self_value, self_value, _pos, _inc, acc), do: acc
-  defp _get_line(self_value, _value, pos = {x, y}, inc = {x_inc, y_inc}, acc) do
-    next_value = get_state(x + x_inc, y + y_inc)
+  defp _get_line(_states, _self_value, _value = nil, _pos, _inc, _acc), do: []
+  defp _get_line(_states, _self_value, _value = 0, _pos, _inc, _acc), do: []
+  defp _get_line(_states, self_value, self_value, _pos, _inc, acc), do: acc
+  defp _get_line(states, self_value, _value, pos = {x, y}, inc = {x_inc, y_inc}, acc) do
+    next_value = states[{x + x_inc, y + y_inc}]
     
-    _get_line(self_value, next_value, {x + x_inc, y + y_inc}, inc, [pos | acc])
+    _get_line(states, self_value, next_value, {x + x_inc, y + y_inc}, inc, [pos | acc])
   end
 
 end
