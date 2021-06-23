@@ -8,6 +8,9 @@ defmodule Reversi.Board do
     Agent.start_link(fn -> initial_board() end, name: @name)
   end
 
+  def reset,
+  do: Agent.update(@name, fn _ -> initial_board() end)
+
   def get_state(x, y),
   do: get_states()[{x, y}]
 
@@ -26,6 +29,10 @@ defmodule Reversi.Board do
     end)
   end
 
+  def count(states) do
+    states |> Map.values |> Enum.frequencies |> Map.take([-1, 1])
+  end
+
   def print_states do
     key_fnc = fn {{_x, y}, _value} -> y end
     value_fnc = fn {{_x, _y}, value} -> value end
@@ -38,7 +45,6 @@ defmodule Reversi.Board do
     |> Enum.join("\n")
     |> String.replace("-1", "w")
     |> String.replace("1", "b")
-    |> String.replace("0", " ")
   end
 
   @range 1..8
@@ -55,7 +61,7 @@ defmodule Reversi.Board do
   end
   defp _can_set?(_value, _pos, _cur_value), do: false
 
-  def _get_all_lines(states, value, {x, y}) do
+  defp _get_all_lines(states, value, {x, y}) do
     Enum.flat_map(-1..1, fn x_inc ->
       Enum.flat_map(-1..1, fn y_inc ->
         next_value = states[{x + x_inc, y + y_inc}]

@@ -14,14 +14,24 @@ defmodule Reversi do
   def routine(false, _), do: nil
   def routine(true, index) do
     result_1 = _set_pos(@black) 
-    File.write("result/gen#{index}_b.txt", Reversi.Board.print_states())
+    ouput(index, "b")
     result_2 = _set_pos(@white)
-    File.write("result/gen#{index}_w.txt", Reversi.Board.print_states())
+    ouput(index, "w")
     routine(result_1 || result_2, index + 1)
   end
 
   defp _get_next_pos(value) do
-    Reversi.Board.get_states() |> Map.keys |> Enum.find(fn pos -> Reversi.Board.can_set?(value, pos) end)
+    Reversi.Board.get_states() 
+    |> Map.keys 
+    |> Enum.filter(&Reversi.Board.can_set?(value, &1))
+    |> Enum.max_by(
+        &_prediction(Reversi.Board.get_states(), value, &1),
+        fn -> nil end
+      )
+  end
+
+  defp _prediction(states, value, pos) do
+    Reversi.Board.set_value(states, value, pos) |> Reversi.Board.count
   end
 
   defp _set_pos(value), do: _get_next_pos(value) |> _set_pos(value)
@@ -29,5 +39,12 @@ defmodule Reversi do
   defp _set_pos(pos, value) do
     Reversi.Board.set_state(value, pos)
     true
+  end
+
+  defp ouput(index, value) do
+    IO.inspect(Reversi.Board.get_states |> Reversi.Board.count)
+
+    filename = "result/gen#{index}_#{value}.txt"
+    File.write(filename, Reversi.Board.print_states())
   end
 end

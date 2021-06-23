@@ -70,7 +70,7 @@ defmodule Reversi.BoardTest do
 
   test "set_state" do
     Reversi.Board.start_link()
-    Reversi.Board.set_state({3,4}, 1)
+    Reversi.Board.set_state(1, {3,4})
     assert Reversi.Board.print_states() == String.trim("""
     00000000
     00000000
@@ -82,7 +82,7 @@ defmodule Reversi.BoardTest do
     00000000
     """)
 
-    Reversi.Board.set_state({3,5}, -1)
+    Reversi.Board.set_state(-1, {3,5})
     assert Reversi.Board.print_states() == String.trim("""
     00000000
     00000000
@@ -94,7 +94,7 @@ defmodule Reversi.BoardTest do
     00000000
     """)
 
-    Reversi.Board.set_state({3,6}, 1)
+    Reversi.Board.set_state(1, {3,6})
     assert Reversi.Board.print_states() == String.trim("""
     00000000
     00000000
