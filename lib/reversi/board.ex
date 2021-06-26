@@ -21,7 +21,10 @@ defmodule Reversi.Board do
   do: Agent.update(@name, &set_value(&1, value, pos))
 
   def can_set?(value, {x, y}), 
-  do: _can_set?(value, {x, y}, get_state(x, y))
+  do: can_set?(get_states(), value, {x, y})
+
+  def can_set?(states, value, {x, y}), 
+  do: _can_set?(states, value, {x, y}, states[{ x, y }])
 
   def set_value(states, value, pos) do
     Enum.reduce([pos | _get_all_lines(states, value, pos)], states, fn set_pos, acc -> 
@@ -33,11 +36,21 @@ defmodule Reversi.Board do
     states |> Map.values |> Enum.frequencies |> Map.take([-1, 1])
   end
 
+  def can_set_positions(states, value) do
+    states
+    |> Map.keys 
+    |> Enum.filter(&can_set?(states, value, &1))
+  end
+
   def print_states do
+    get_states() |> print_states()
+  end
+
+  def print_states(states) do
     key_fnc = fn {{_x, y}, _value} -> y end
     value_fnc = fn {{_x, _y}, value} -> value end
 
-    get_states()
+    states
     |> Map.to_list()
     |> List.keysort(0)
     |> Enum.group_by(key_fnc, value_fnc)
@@ -56,10 +69,10 @@ defmodule Reversi.Board do
     |> Map.merge(%{ {4,4} => -1, {4,5} => 1, {5,4} => 1, {5,5} => -1 })
   end
 
-  defp _can_set?(value, pos, _cur_value = 0) do
-    _get_all_lines(get_states(), value, pos) |> Enum.empty?() == false
+  defp _can_set?(states, value, pos, _cur_value = 0) do
+    _get_all_lines(states, value, pos) |> Enum.empty?() == false
   end
-  defp _can_set?(_value, _pos, _cur_value), do: false
+  defp _can_set?(_states, _value, _pos, _cur_value), do: false
 
   defp _get_all_lines(states, value, {x, y}) do
     Enum.flat_map(-1..1, fn x_inc ->
