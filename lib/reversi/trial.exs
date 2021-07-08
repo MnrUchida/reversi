@@ -3,10 +3,59 @@ defmodule Reversi.Trial do
   Documentation for `Reversi`.
   """
 
-  def hoge2(value) do
-    [Reversi.Board.get_states]
-    |> Enum.flat_map(&_prediction_states(&1, value))
+  # def prediction_routine(cur_states, value) do
+  #   _states(cur_states, value)
+  #   |> Enum.map(fn { pos, states } -> 
+  #                 { 
+  #                   pos, 
+  #                   _states(states, -value) 
+  #                   |> Enum.map(fn {_, state} -> 
+  #                                   max_count_pos(state, value) |> _count(state, value)
+  #                     end)
+  #                   |> Enum.max
+  #                 }
+  #               end )
+  # end
+
+  # def max_count_pos(states, value) do
+  #   states
+  #   |> Reversi.Board.can_set_positions(value)
+  #   |> Enum.max_by(
+  #       &_count(&1, states, value),
+  #       fn -> nil end
+  #     )
+  # end
+
+  def hoge(states, value) do
+    prediction_routine(states, value)
+  end
+
+  def prediction_routine(cur_states, value) do
+    _prediction_states(cur_states, value)
+    |> Enum.map(fn { pos, states } -> 
+                  { 
+                    pos, 
+                    _prediction_states(states, -value) 
+                    |> Enum.map(fn {_, state} -> 
+                                    max_count_pos(state, value) |> _prediction_count(state, value)
+                      end)
+                    |> Enum.max
+                  }
+                end )
+  end
+
+  def prediction_routine(states, value) do
+    _prediction_states(states, value)
     |> Enum.flat_map(&_prediction_states(&1, -value))
+  end
+
+  def max_count_pos(states, value) do
+    states
+    |> Reversi.Board.can_set_positions(value)
+    |> Enum.max_by(
+        &_prediction_count(&1, states, value),
+        fn -> nil end
+      )
   end
 
   def huga(value) do
@@ -27,6 +76,13 @@ defmodule Reversi.Trial do
   def _prediction_states(states, value) do
     states
     |> Reversi.Board.can_set_positions(value)
-    |> Enum.map(&Reversi.Board.set_value(states, value, &1))
+    |> Enum.map(fn pos -> 
+                  { pos, Reversi.Board.set_value(states, value, pos) }
+                end)
+  end
+
+  defp _prediction_count(pos, states, value) do
+    Reversi.Board.set_value(states, value, pos) 
+    |> Reversi.Board.count
   end
 end
