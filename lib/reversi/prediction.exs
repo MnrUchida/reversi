@@ -17,7 +17,7 @@ defmodule Reversi.Prediction do
 
   def hoge do
     Reversi.Board.start_link
-    Reversi.Board.get_states |> Reversi.Prediction._routine(1, 3, &Reversi.Board.count(&1))  
+    Reversi.Board.get_states |> Reversi.Prediction._routine(1, 2, &Reversi.Board.count(&1))  
   end
 
   def _routine(cur_states, value, 0, fnc) do
@@ -39,7 +39,8 @@ defmodule Reversi.Prediction do
 
   def _map_for_states(cur_states, value, fnc) do
     _states(cur_states, value)
-    |> Enum.map(fn { pos, states } -> { pos, fnc.(states) } end )
+    |> Stream.map(fn { pos, states } -> Task.async(fn -> { pos, fnc.(states) } end) end)
+    |> Enum.map(&Task.await/1)
   end
 
   def _states(states, value) do
